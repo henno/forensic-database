@@ -1,16 +1,21 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { Database } from 'sqlite3';
+import express, {Request} from 'express';
+import {Database} from 'sqlite3';
 import multer from 'multer';
 import cors from 'cors';
 import path from 'path';
-import { readFileSync, existsSync, mkdirSync } from 'fs';
+import {appendFileSync, existsSync, mkdirSync} from 'fs';
 import session from 'express-session';
-import bcrypt from 'bcryptjs';
-import { engine } from 'express-handlebars';
+import {engine} from 'express-handlebars';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
+
+// Helper function to log to file
+function logToFile(message: string) {
+  const timestamp = new Date().toISOString();
+  appendFileSync('debug.log', `${timestamp}: ${message}\n`);
+}
 
 // Extend session types
 declare module 'express-session' {
@@ -31,20 +36,39 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configure handlebars
-app.engine('hbs', engine({
+const hbs = engine({
   extname: '.hbs',
   defaultLayout: 'main',
   layoutsDir: path.join(process.cwd(), 'views/layouts'),
   partialsDir: path.join(process.cwd(), 'views/partials'),
   helpers: {
     formatDate: function(timestamp: number | string, isMicroseconds?: boolean) {
-      let date;
-      if (isMicroseconds) {
-        date = new Date(Number(timestamp) / 1000);
-      } else {
-        date = new Date(timestamp);
+      if (!timestamp) {
+        return 'No date';
       }
-      return date.toLocaleString();
+
+      try {
+        let date;
+
+        // Check if isMicroseconds is actually a boolean true, not a Handlebars context object
+        const isActuallyMicroseconds = isMicroseconds === true;
+
+        if (isActuallyMicroseconds) {
+          // Browser history microseconds - convert to milliseconds
+          date = new Date(Number(timestamp) / 1000);
+        } else {
+          // Call dates - ISO strings or regular timestamps
+          date = new Date(timestamp);
+        }
+
+        if (isNaN(date.getTime())) {
+          return 'Invalid date';
+        }
+
+        return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}$/, '');
+      } catch (error) {
+        return 'Error';
+      }
     },
     formatDuration: function(seconds: number) {
       if (!seconds || seconds === 0) return '00:00:00';
@@ -139,7 +163,9 @@ app.engine('hbs', engine({
       return a === b;
     }
   }
-}));
+});
+
+app.engine('hbs', hbs);
 app.set('view engine', 'hbs');
 app.set('views', path.join(process.cwd(), 'views'));
 
@@ -291,6 +317,8 @@ app.post('/logout', (req: any, res: any) => {
 
 // Protected main page
 app.get('/', requireAuth, (req: any, res: any) => {
+  logToFile('=== DASHBOARD ROUTE ACCESSED ===');
+  
   const query = `
     SELECT 
       c.*,
@@ -330,6 +358,7 @@ app.get('/', requireAuth, (req: any, res: any) => {
   
   db.all(query, (err, rows) => {
     if (err) {
+      logToFile(`DATABASE ERROR: ${err.message}`);
       console.error('Database error:', err);
       return res.render('dashboard', {
         title: 'Forex Fraud Evidence Portal',
@@ -340,6 +369,8 @@ app.get('/', requireAuth, (req: any, res: any) => {
       });
     }
     
+    logToFile(`DATABASE QUERY SUCCESS: Found ${rows.length} calls`);
+    
     // Parse JSON fields and prepare data
     const calls = rows.map((row: any) => {
       const browserHistory = JSON.parse(row.browser_history).filter((entry: any) => entry.id !== null);
@@ -348,6 +379,17 @@ app.get('/', requireAuth, (req: any, res: any) => {
       // Sort browser history by time
       browserHistory.sort((a: any, b: any) => a.time_usec - b.time_usec);
       
+      // Debug: log the first call's data
+      if (row.id === 1) {
+        logToFile(`FIRST CALL DATA: ${JSON.stringify({ 
+          id: row.id, 
+          start_time: row.start_time, 
+          end_time: row.end_time,
+          start_type: typeof row.start_time,
+          end_type: typeof row.end_time
+        })}`);
+      }
+      
       return {
         ...row,
         browser_history: browserHistory,
@@ -355,6 +397,8 @@ app.get('/', requireAuth, (req: any, res: any) => {
         hasBrowserHistory: browserHistory.length > 0
       };
     });
+    
+    logToFile(`RENDERING DASHBOARD with ${calls.length} calls`);
     
     res.render('dashboard', {
       title: 'Forex Fraud Evidence Portal',
@@ -578,5 +622,12 @@ app.delete('/api/attachments/:id', requireAuth, requireAdmin, (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  const now = new Date().toISOString();
+  console.log(`[${now}] Server running on http://localhost:${PORT}`);
+  try {
+    logToFile('=== SERVER STARTED - Testing file logging ===');
+    logToFile('If you see this, file logging is working');
+  } catch (error) {
+    console.log('Error writing to debug.log:', error);
+  }
 });
