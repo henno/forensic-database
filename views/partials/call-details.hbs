@@ -12,12 +12,12 @@
             {{#each browser_history}}
                 <tr>
                     <td class="date-cell">{{{formatDate time_usec true}}}</td>
-                    <td class="title-cell" title="{{#if title}}{{title}}{{else}}(no title){{/if}}">
+                    <td class="title-cell" title="{{#if title}}Original: {{title}}{{else}}(no title){{/if}}">
                         {{#if favicon_base64}}
                             <img src="{{favicon_base64}}" alt="favicon" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
                         {{/if}}
                         <a href="{{url}}" target="_blank" rel="noopener noreferrer">
-                            {{#if title}}{{title}}{{else}}(no title){{/if}}
+                            {{getDisplayTitle title title_en}}
                         </a>
                     </td>
                     <td class="url-cell" title="{{url}}">

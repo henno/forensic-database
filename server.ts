@@ -73,6 +73,13 @@ const hbs = engine({
         return 'Error';
       }
     },
+    getDisplayTitle: function(title: string, title_en: string) {
+      // Return English title if available and not empty, otherwise return original title
+      if (title_en && title_en.trim().length > 0) {
+        return title_en;
+      }
+      return title || '(no title)';
+    },
     formatDuration: function(seconds: number) {
       if (!seconds || seconds === 0) return '00:00:00';
       
@@ -331,6 +338,7 @@ app.get('/', requireAuth, (req: any, res: any) => {
             'id', bh.id,
             'time_usec', bh.time_usec,
             'title', bh.title,
+            'title_en', bh.title_en,
             'url', bh.url,
             'favicon_url', f.url,
             'favicon_base64', f.base64_data,
@@ -433,6 +441,7 @@ app.get('/api/calls', requireAuth, (req, res) => {
             'id', bh.id,
             'time_usec', bh.time_usec,
             'title', bh.title,
+            'title_en', bh.title_en,
             'url', bh.url,
             'favicon_url', f.url,
             'favicon_base64', f.base64_data,
@@ -490,6 +499,7 @@ app.get('/api/calls/:id', requireAuth, (req, res) => {
           'id', bh.id,
           'time_usec', bh.time_usec,
           'title', bh.title,
+          'title_en', bh.title_en,
           'url', bh.url,
           'favicon_url', f.url,
           'favicon_base64', f.base64_data,
