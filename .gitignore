@@ -13,7 +13,6 @@ yarn-error.log*
 
 # Database files (keep schema, ignore data)
 database.sqlite
-backup_before_dedup.sqlite
 
 # Log files
 *.log
@@ -84,3 +83,5 @@ build/
 # Backup files
 *.bak
 *.backup
+
+/.idea

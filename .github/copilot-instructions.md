@@ -19,6 +19,7 @@ This is a **Forex Fraud Evidence Portal** - a secure web application for viewing
 - **`package.json`** - Dependencies: express, sqlite3, express-handlebars, express-session, bcryptjs, multer, dotenv
 - **`bun.lock`** - Bun package manager lock file
 - **`.env`** - Environment variables (ADMIN_USERNAME, ADMIN_PASSWORD, VIEWER_USERNAME, VIEWER_PASSWORD, SESSION_SECRET)
+- **`.gitignore`** - Git ignore file (excludes sensitive data and build artifacts)
 
 ### Data Files
 - **`backup_before_dedup.sqlite`** - Database backup before deduplication
@@ -106,7 +107,14 @@ This is a **Forex Fraud Evidence Portal** - a secure web application for viewing
 1. Install Bun runtime
 2. Run `bun install` to install dependencies
 3. Create `.env` file with authentication credentials
-4. Start server with `bun run server.ts`
+4. Initialize database with `database.sql` schema
+5. Start server with `bun run server.ts`
+
+### Git Repository:
+- **Initialized**: Git repository with main branch
+- **Initial commit**: Complete project structure and functionality
+- **Ignored files**: Sensitive data (.env, *.sqlite), logs, uploads, node_modules
+- **Tracked files**: Source code, templates, documentation, schema
 
 ## 🚀 Recent Changes & Current State
 - **Converted from client-side to server-side rendering** using Handlebars

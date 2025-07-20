@@ -6,13 +6,16 @@
         {{formatDate start_time}}
     </td>
     <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">
+        {{formatDate end_time}}
+    </td>
+    <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">{{formatDuration duration}}</td>
+    <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">
         <span style="margin-right: 6px;">{{getCountryFlag phone}}</span>
         {{#if phone}}{{phone}}{{else}}Unknown{{/if}}
     </td>
-    <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">{{formatDuration duration}}</td>
 </tr>
 <tr class="nested-row" id="nested-row-{{id}}" style="display: {{#if hasBrowserHistory}}table-row{{else}}none{{/if}};">
-    <td colspan="3">
+    <td colspan="4">
         {{> call-details}}
     </td>
 </tr>

@@ -1,9 +1,10 @@
 <table class="calls-table">
     <thead>
         <tr>
-            <th style="width: 180px;">Call Time</th>
-            <th style="width: 260px;">Phone Number</th>
-            <th style="width: 340px;">Duration</th>
+            <th style="width: 160px;">Start Time</th>
+            <th style="width: 160px;">End Time</th>
+            <th style="width: 120px;">Duration</th>
+            <th style="width: 200px;">Phone Number</th>
         </tr>
     </thead>
     <tbody>
@@ -12,7 +13,7 @@
                 {{> call-row}}
             {{/each}}
         {{else}}
-            <tr><td colspan="3" class="no-data">No call history found</td></tr>
+            <tr><td colspan="4" class="no-data">No call history found</td></tr>
         {{/if}}
     </tbody>
 </table>
