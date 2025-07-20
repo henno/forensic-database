@@ -1,0 +1,43 @@
+{{#if browser_history}}
+    <div style="font-weight:bold; color:#007acc; margin-bottom:6px;">Sites visited during this call:</div>
+    <table border="1" cellspacing="0" cellpadding="1">
+        <thead>
+            <tr>
+                <th>Date and Time</th>
+                <th>Title</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each browser_history}}
+                <tr>
+                    <td class="date-cell">{{formatDate time_usec true}}</td>
+                    <td class="title-cell" title="{{#if title}}{{title}}{{else}}(no title){{/if}}">
+                        {{#if favicon_base64}}
+                            <img src="{{favicon_base64}}" alt="favicon" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
+                        {{/if}}
+                        <a href="{{url}}" target="_blank" rel="noopener noreferrer">
+                            {{#if title}}{{title}}{{else}}(no title){{/if}}
+                        </a>
+                    </td>
+                    <td class="url-cell" title="{{url}}">
+                        {{{formatUrl url}}}
+                    </td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
+{{/if}}
+
+{{#if attachments}}
+    <div class="attachments">
+        <h4>📎 Attachments ({{attachments.length}})</h4>
+        {{#each attachments}}
+            {{> attachment}}
+        {{/each}}
+    </div>
+{{/if}}
+
+{{#if ../isAdmin}}
+    {{> add-attachment-form}}
+{{/if}}

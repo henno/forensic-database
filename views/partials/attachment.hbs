@@ -1,0 +1,19 @@
+<div class="attachment">
+    {{#if (eq type 'text')}}
+        <div class="attachment-text">"{{content}}"</div>
+        <div class="attachment-meta">
+            Text note - {{formatDate created_at}}
+            {{#if ../isAdmin}}
+                <button class="btn btn-danger" onclick="deleteAttachment({{id}})">Delete</button>
+            {{/if}}
+        </div>
+    {{else if (eq type 'image')}}
+        <img src="{{#if url}}{{url}}{{else}}/uploads/{{content}}{{/if}}" alt="{{filename}}" class="attachment-image">
+        <div class="attachment-meta">
+            {{filename}} - {{formatDate created_at}}
+            {{#if ../isAdmin}}
+                <button class="btn btn-danger" onclick="deleteAttachment({{id}})">Delete</button>
+            {{/if}}
+        </div>
+    {{/if}}
+</div>

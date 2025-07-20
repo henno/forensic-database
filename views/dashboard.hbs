@@ -1,0 +1,13 @@
+<div class="container">
+    {{> header}}
+    
+    {{> case-banner}}
+    
+    {{#if error}}
+        <div class="error">{{error}}</div>
+    {{/if}}
+    
+    {{> calls-table}}
+</div>
+
+<script src="/app.js"></script>

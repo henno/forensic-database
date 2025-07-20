@@ -1,0 +1,35 @@
+<div class="login-container">
+    <div class="login-header">
+        <h1>� Evidence Database</h1>
+        <p>Forex Fraud Investigation System</p>
+    </div>
+    
+    {{#if error}}
+    <div class="alert alert-error">
+        {{error}}
+    </div>
+    {{/if}}
+    
+    <form method="POST" action="/login">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required value="{{username}}">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        
+        <button type="submit" class="btn">Sign In</button>
+    </form>
+    
+    <div class="user-info">
+        <h3>Available Accounts</h3>
+        <ul>
+            <li><strong>admin</strong> - Full access (view, add, delete)</li>
+            <li><strong>viewer</strong> - Read-only access</li>
+        </ul>
+        <p><em>Use the credentials from your .env file</em></p>
+    </div>
+</div>

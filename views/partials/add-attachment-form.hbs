@@ -1,0 +1,15 @@
+<div class="add-attachment">
+    <h4>➕ Add Attachment</h4>
+    
+    <div class="form-group">
+        <label for="text-{{../id}}">Add Text Note:</label>
+        <textarea id="text-{{../id}}" placeholder="Enter your note..."></textarea>
+        <button class="btn" onclick="addTextAttachment({{../id}})">Add Text</button>
+    </div>
+    
+    <div class="form-group">
+        <label for="image-{{../id}}">Add Image:</label>
+        <input type="file" id="image-{{../id}}" accept="image/*">
+        <button class="btn" onclick="addImageAttachment({{../id}})">Upload Image</button>
+    </div>
+</div>
