@@ -3,10 +3,10 @@
         <span class="call-toggle {{#if hasBrowserHistory}}expanded{{/if}}" style="margin-right: 8px; cursor: pointer;">
             {{#if hasBrowserHistory}}▼{{else}}▶{{/if}}
         </span>
-        {{formatDate start_time}}
+        {{{formatDate start_time}}}
     </td>
     <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">
-        {{formatDate end_time}}
+        {{{formatDate end_time}}}
     </td>
     <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">{{formatDuration duration}}</td>
     <td style="{{#if hasBrowserHistory}}font-weight: bold;{{/if}}">

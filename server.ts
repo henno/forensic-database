@@ -65,7 +65,10 @@ const hbs = engine({
           return 'Invalid date';
         }
 
-        return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}$/, '');
+        const fullPrecision = date.toISOString().replace('T', ' ').replace('Z', '');
+        const displayFormat = date.toISOString().replace('T', ' ').replace('Z', '').replace(/:\d{2}\.\d{3}$/, '');
+
+        return `<span title="${fullPrecision}">${displayFormat}</span>`;
       } catch (error) {
         return 'Error';
       }

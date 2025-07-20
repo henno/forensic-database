@@ -1,5 +1,5 @@
 {{#if browser_history}}
-    <div style="font-weight:bold; color:#007acc; margin-bottom:6px;">Sites visited during this call:</div>
+    <div style="font-weight:bold; color:#007acc; margin-bottom:6px; margin-left:10px;">Sites visited during this call:</div>
     <table border="1" cellspacing="0" cellpadding="1">
         <thead>
             <tr>
@@ -11,7 +11,7 @@
         <tbody>
             {{#each browser_history}}
                 <tr>
-                    <td class="date-cell">{{formatDate time_usec true}}</td>
+                    <td class="date-cell">{{{formatDate time_usec true}}}</td>
                     <td class="title-cell" title="{{#if title}}{{title}}{{else}}(no title){{/if}}">
                         {{#if favicon_base64}}
                             <img src="{{favicon_base64}}" alt="favicon" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
