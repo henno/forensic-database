@@ -342,11 +342,13 @@ app.get('/', requireAuth, (req: any, res: any) => {
             'url', bh.url,
             'favicon_url', f.url,
             'favicon_base64', f.base64_data,
-            'favicon_id', f.id
+            'favicon_id', f.id,
+            'annotation', COALESCE(ba.annotation, '')
           )
         )
         FROM browser_history bh
         LEFT JOIN favicons f ON bh.favicon_id = f.id
+        LEFT JOIN browser_annotations ba ON bh.id = ba.browser_history_id
         WHERE bh.call_id = c.id
       ) as browser_history,
       (
@@ -445,11 +447,13 @@ app.get('/api/calls', requireAuth, (req, res) => {
             'url', bh.url,
             'favicon_url', f.url,
             'favicon_base64', f.base64_data,
-            'favicon_id', f.id
+            'favicon_id', f.id,
+            'annotation', COALESCE(ba.annotation, '')
           )
         )
         FROM browser_history bh
         LEFT JOIN favicons f ON bh.favicon_id = f.id
+        LEFT JOIN browser_annotations ba ON bh.id = ba.browser_history_id
         WHERE bh.call_id = c.id
       ) as browser_history,
       (
@@ -503,7 +507,8 @@ app.get('/api/calls/:id', requireAuth, (req, res) => {
           'url', bh.url,
           'favicon_url', f.url,
           'favicon_base64', f.base64_data,
-          'favicon_id', f.id
+          'favicon_id', f.id,
+          'annotation', COALESCE(ba.annotation, '')
         )
       ) as browser_history,
       (
@@ -523,6 +528,7 @@ app.get('/api/calls/:id', requireAuth, (req, res) => {
     FROM calls c
     LEFT JOIN browser_history bh ON c.id = bh.call_id
     LEFT JOIN favicons f ON bh.favicon_id = f.id
+    LEFT JOIN browser_annotations ba ON bh.id = ba.browser_history_id
     WHERE c.id = ?
     GROUP BY c.id
   `;
@@ -630,6 +636,104 @@ app.delete('/api/attachments/:id', requireAuth, requireAdmin, (req, res) => {
     }
     
     res.json({ message: 'Attachment deleted successfully' });
+  });
+});
+
+// Browser History Annotation Endpoints
+
+// Get annotation for a browser history entry
+app.get('/api/browser-history/:id/annotation', requireAuth, (req, res) => {
+  const browserHistoryId = req.params.id;
+
+  const query = 'SELECT * FROM browser_annotations WHERE browser_history_id = ?';
+
+  db.get(query, [browserHistoryId], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    res.json({
+      browser_history_id: browserHistoryId,
+      annotation: row ? row.annotation : '',
+      id: row ? row.id : null,
+      created_at: row ? row.created_at : null,
+      updated_at: row ? row.updated_at : null
+    });
+  });
+});
+
+// Save/update annotation for a browser history entry
+app.post('/api/browser-history/:id/annotation', requireAuth, requireAdmin, (req, res) => {
+  const browserHistoryId = req.params.id;
+  const { annotation } = req.body;
+
+  if (annotation === undefined) {
+    res.status(400).json({ error: 'Annotation content is required' });
+    return;
+  }
+
+  // First check if annotation already exists
+  db.get('SELECT id FROM browser_annotations WHERE browser_history_id = ?', [browserHistoryId], (err, row) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    if (row) {
+      // Update existing annotation
+      const updateQuery = 'UPDATE browser_annotations SET annotation = ?, updated_at = CURRENT_TIMESTAMP WHERE browser_history_id = ?';
+      db.run(updateQuery, [annotation, browserHistoryId], function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+
+        res.json({
+          id: row.id,
+          browser_history_id: browserHistoryId,
+          annotation: annotation,
+          updated_at: new Date().toISOString()
+        });
+      });
+    } else {
+      // Create new annotation
+      const insertQuery = 'INSERT INTO browser_annotations (browser_history_id, annotation) VALUES (?, ?)';
+      db.run(insertQuery, [browserHistoryId, annotation], function(err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
+
+        res.json({
+          id: (this as any).lastID,
+          browser_history_id: browserHistoryId,
+          annotation: annotation,
+          created_at: new Date().toISOString()
+        });
+      });
+    }
+  });
+});
+
+// Delete annotation for a browser history entry
+app.delete('/api/browser-history/:id/annotation', requireAuth, requireAdmin, (req, res) => {
+  const browserHistoryId = req.params.id;
+
+  const query = 'DELETE FROM browser_annotations WHERE browser_history_id = ?';
+
+  db.run(query, [browserHistoryId], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    if ((this as any).changes === 0) {
+      res.status(404).json({ error: 'Annotation not found' });
+      return;
+    }
+
+    res.json({ message: 'Annotation deleted successfully' });
   });
 });
 

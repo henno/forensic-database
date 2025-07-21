@@ -3,6 +3,7 @@
     <table border="1" cellspacing="0" cellpadding="1">
         <thead>
             <tr>
+                <th style="width: 20px;"></th>
                 <th>Date and Time</th>
                 <th>Title</th>
                 <th>URL</th>
@@ -10,7 +11,10 @@
         </thead>
         <tbody>
             {{#each browser_history}}
-                <tr>
+                <tr class="browser-entry-row" data-browser-id="{{id}}">
+                    <td style="text-align: center; cursor: pointer; user-select: none;">
+                        <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                    </td>
                     <td class="date-cell">{{{formatDate time_usec true}}}</td>
                     <td class="title-cell" title="{{#if title}}Original: {{title}}{{else}}(no title){{/if}}">
                         {{#if favicon_base64}}
@@ -22,6 +26,31 @@
                     </td>
                     <td class="url-cell" title="{{url}}">
                         {{{formatUrl url}}}
+                    </td>
+                </tr>
+                <tr class="browser-annotation-row" id="browser-annotation-{{id}}" style="display: none;">
+                    <td colspan="4" style="padding: 10px; background-color: #f9f9f9; border-top: none;">
+                        <div class="annotation-section">
+                            <strong>Annotation:</strong>
+
+                            {{#if @root.isAdmin}}
+                                <div style="margin-top: 5px;">
+                                    <textarea
+                                        class="annotation-textarea"
+                                        data-browser-id="{{id}}"
+                                        placeholder="Add markdown annotation for this browser entry..."
+                                        style="width: 100%; min-height: 100px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; padding: 5px; resize: vertical; background: white;"
+                                        spellcheck="false">{{annotation}}</textarea>
+                                    <div style="margin-top: 5px;">
+                                        <button class="save-annotation-btn" data-browser-id="{{id}}" style="background: #007acc; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-right: 5px;">Save</button>
+                                        <button class="clear-annotation-btn" data-browser-id="{{id}}" style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;">Clear</button>
+                                        <span class="annotation-status" data-browser-id="{{id}}" style="margin-left: 10px; font-style: italic; color: #666;"></span>
+                                    </div>
+                                </div>
+                            {{else}}
+                                <div style="margin-top: 5px; padding: 10px; background: white; border: 1px solid #ddd; min-height: 50px; white-space: pre-wrap; font-family: monospace; font-size: 12px;">{{#if annotation}}{{annotation}}{{else}}<em>No annotation</em>{{/if}}</div>
+                            {{/if}}
+                        </div>
                     </td>
                 </tr>
             {{/each}}
