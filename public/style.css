@@ -120,6 +120,11 @@ h1 {
     color: #005999;
 }
 
+.call-toggle.expanded {
+    transform: rotate(-90deg);
+    font-weight: 900;
+}
+
 .nested-row td {
     padding: 0;
     border-top: none;
@@ -375,13 +380,13 @@ h1 {
 
 .browser-toggle {
     display: inline-block;
-    transition: transform 0.2s ease;
-    font-weight: bold;
+    transition: transform 0.2s ease, font-weight 0.2s ease;
     color: #007acc;
 }
 
 .browser-toggle.expanded {
-    transform: rotate(90deg);
+    transform: rotate(-90deg);
+    font-weight: 900;
 }
 
 .date-cell {
@@ -399,6 +404,15 @@ h1 {
     max-width: 400px;
     word-wrap: break-word;
     font-size: 12px;
+}
+
+/* Browser annotation row animations */
+.browser-annotation-row td {
+    padding: 0;
+}
+
+.annotation-section {
+    padding: 10px;
 }
 
 /* Floating call context banner */

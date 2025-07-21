@@ -15,9 +15,9 @@
                 <tr class="browser-entry-row" data-browser-id="{{id}}">
                     <td style="text-align: center; {{#if (or ../isAdmin annotation)}}cursor: pointer; user-select: none;{{else}}cursor: default;{{/if}}">
                         {{#if (or ../isAdmin annotation)}}
-                            <span class="browser-toggle" style="font-size: 12px;">{{#if annotation}}▼{{else}}▶{{/if}}</span>
+                            <span class="browser-toggle {{#if annotation}}expanded{{/if}}" style="font-size: 12px;">{{#if annotation}}↰{{else}}→{{/if}}</span>
                         {{else}}
-                            <span style="font-size: 12px; color: transparent;">▶</span>
+                            <span style="font-size: 12px; color: transparent;">→</span>
                         {{/if}}
                     </td>
                     <td class="date-cell">{{{formatDate time_usec true}}}</td>

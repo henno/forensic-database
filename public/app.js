@@ -19,10 +19,44 @@ document.addEventListener('DOMContentLoaded', function() {
             const html = renderMarkdownToHTML(textarea.value);
             previewDiv.innerHTML = html;
         }
+        
+        // Wrap pre-expanded content in slide container for animation
+        const annotationSection = row.querySelector('.annotation-section');
+        if (annotationSection && !annotationSection.querySelector('.slide-container')) {
+            const slideContainer = document.createElement('div');
+            slideContainer.className = 'slide-container';
+            slideContainer.style.overflow = 'hidden';
+            slideContainer.style.transition = 'max-height 0.3s ease-out';
+            slideContainer.style.maxHeight = 'none';
+            
+            // Move all content into the slide container
+            while (annotationSection.firstChild) {
+                slideContainer.appendChild(annotationSection.firstChild);
+            }
+            annotationSection.appendChild(slideContainer);
+        }
     });
 
     // Initialize call context banner
     initializeCallContextBanner();
+    
+    // Initialize pre-expanded call rows with slide containers
+    document.querySelectorAll('.nested-row[style*="table-row"]').forEach(row => {
+        const td = row.querySelector('td');
+        if (td && !td.querySelector('.call-slide-container')) {
+            const slideContainer = document.createElement('div');
+            slideContainer.className = 'call-slide-container';
+            slideContainer.style.overflow = 'hidden';
+            slideContainer.style.transition = 'max-height 0.4s ease-out';
+            slideContainer.style.maxHeight = 'none';
+            
+            // Move all content into the slide container
+            while (td.firstChild) {
+                slideContainer.appendChild(td.firstChild);
+            }
+            td.appendChild(slideContainer);
+        }
+    });
 
     // Add click handlers to call rows
     document.querySelectorAll('.call-row').forEach(row => {
@@ -105,7 +139,7 @@ function initializeCallContextBanner() {
                 
                 // Extract call information
                 const cells = activeCall.querySelectorAll('td');
-                const startTime = cells[0].textContent.replace('▼', '').trim();
+                const startTime = cells[0].textContent.replace('↰', '').replace('→', '').trim();
                 const duration = cells[2].textContent.trim();
                 const phone = cells[3].textContent.trim();
                 
@@ -156,17 +190,70 @@ function toggleCallDetails(callId) {
     const mainRow = document.querySelector(`tr[data-call-id="${callId}"]`);
     const nestedRow = document.getElementById(`nested-row-${callId}`);
     const toggle = mainRow.querySelector('.call-toggle');
+    const td = nestedRow.querySelector('td');
 
     if (nestedRow.style.display === 'none') {
+        // Expanding
         nestedRow.style.display = 'table-row';
+        
+        // Wrap content in a sliding container if not already wrapped
+        let slideContainer = td.querySelector('.call-slide-container');
+        if (!slideContainer) {
+            slideContainer = document.createElement('div');
+            slideContainer.className = 'call-slide-container';
+            slideContainer.style.overflow = 'hidden';
+            slideContainer.style.transition = 'max-height 0.4s ease-out';
+            
+            // Move all content into the slide container
+            while (td.firstChild) {
+                slideContainer.appendChild(td.firstChild);
+            }
+            td.appendChild(slideContainer);
+        }
+        
+        // Get the natural height
+        slideContainer.style.maxHeight = 'none';
+        const height = slideContainer.scrollHeight;
+        
+        // Set initial state for animation
+        slideContainer.style.maxHeight = '0px';
+        
+        // Force browser to recognize the initial state
+        slideContainer.offsetHeight;
+        
+        // Animate to full height
+        slideContainer.style.maxHeight = height + 'px';
+        
         mainRow.classList.add('expanded');
-        toggle.textContent = '▼';
+        toggle.textContent = '↰';
         toggle.classList.add('expanded');
+        
+        // Remove height constraint after animation
+        setTimeout(() => {
+            slideContainer.style.maxHeight = 'none';
+        }, 400);
     } else {
-        nestedRow.style.display = 'none';
+        // Collapsing
+        const slideContainer = td.querySelector('.call-slide-container');
+        
+        if (slideContainer) {
+            // Set explicit height for animation
+            slideContainer.style.maxHeight = slideContainer.scrollHeight + 'px';
+            slideContainer.offsetHeight; // Force reflow
+            
+            // Animate to zero
+            slideContainer.style.transition = 'max-height 0.4s ease-out';
+            slideContainer.style.maxHeight = '0px';
+        }
+        
         mainRow.classList.remove('expanded');
-        toggle.textContent = '▶';
+        toggle.textContent = '→';
         toggle.classList.remove('expanded');
+        
+        // Hide after animation completes
+        setTimeout(() => {
+            nestedRow.style.display = 'none';
+        }, 400);
     }
 }
 
@@ -279,10 +366,41 @@ function toggleBrowserAnnotation(browserId) {
     const entryRow = document.querySelector(`tr[data-browser-id="${browserId}"]`);
     const annotationRow = document.getElementById(`browser-annotation-${browserId}`);
     const toggle = entryRow.querySelector('.browser-toggle');
+    const annotationSection = annotationRow.querySelector('.annotation-section');
 
-    if (annotationRow.style.display === 'none') {
+    if (annotationRow.style.display === 'none' || annotationRow.style.display === '') {
+        // Expanding
         annotationRow.style.display = 'table-row';
-        toggle.textContent = '▼';
+        
+        // Wrap content in a sliding container if not already wrapped
+        let slideContainer = annotationSection.querySelector('.slide-container');
+        if (!slideContainer) {
+            slideContainer = document.createElement('div');
+            slideContainer.className = 'slide-container';
+            slideContainer.style.overflow = 'hidden';
+            slideContainer.style.transition = 'max-height 0.3s ease-out';
+            
+            // Move all content into the slide container
+            while (annotationSection.firstChild) {
+                slideContainer.appendChild(annotationSection.firstChild);
+            }
+            annotationSection.appendChild(slideContainer);
+        }
+        
+        // Get the natural height
+        slideContainer.style.maxHeight = 'none';
+        const height = slideContainer.scrollHeight;
+        
+        // Set initial state for animation
+        slideContainer.style.maxHeight = '0px';
+        
+        // Force browser to recognize the initial state
+        slideContainer.offsetHeight;
+        
+        // Animate to full height
+        slideContainer.style.maxHeight = height + 'px';
+        
+        toggle.textContent = '↰';
         toggle.classList.add('expanded');
 
         // Update preview when first opened
@@ -292,10 +410,32 @@ function toggleBrowserAnnotation(browserId) {
             const html = renderMarkdownToHTML(textarea.value);
             previewDiv.innerHTML = html;
         }
+        
+        // Remove height constraint after animation
+        setTimeout(() => {
+            slideContainer.style.maxHeight = 'none';
+        }, 300);
     } else {
-        annotationRow.style.display = 'none';
-        toggle.textContent = '▶';
+        // Collapsing
+        const slideContainer = annotationSection.querySelector('.slide-container');
+        
+        if (slideContainer) {
+            // Set explicit height for animation
+            slideContainer.style.maxHeight = slideContainer.scrollHeight + 'px';
+            slideContainer.offsetHeight; // Force reflow
+            
+            // Animate to zero
+            slideContainer.style.transition = 'max-height 0.3s ease-out';
+            slideContainer.style.maxHeight = '0px';
+        }
+        
+        toggle.textContent = '→';
         toggle.classList.remove('expanded');
+        
+        // Hide after animation completes
+        setTimeout(() => {
+            annotationRow.style.display = 'none';
+        }, 300);
     }
 }
 
