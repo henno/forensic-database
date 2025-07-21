@@ -87,26 +87,26 @@ const hbs = engine({
 
 
       // Store protected content to avoid conflicts
-      const protectedContent = [];
+      const protectedContent: string[] = [];
       let html = markdown;
 
       // Step 1: Protect and process images
       html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto; border: 1px solid #ddd; margin: 5px 0;">`);
         return placeholder;
       });
 
       // Step 2: Protect and process links
       html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
         return placeholder;
       });
 
       // Step 3: Protect and process code
       html = html.replace(/`([^`]+)`/g, (match, code) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace;">${code}</code>`);
         return placeholder;
       });
@@ -124,11 +124,10 @@ const hbs = engine({
 
       // Step 5: Restore protected content
       for (let i = 0; i < protectedContent.length; i++) {
-        const placeholder = `__PROTECTED_${i}__`;
+        const placeholder = `MDPROTECTED${i}MDPROTECTED`;
         const content = protectedContent[i];
-        html = html.replace(placeholder, content);
+        html = html.replace(new RegExp(placeholder, 'g'), content);
       }
-
       return html;
     },
     formatDuration: function(seconds: number) {

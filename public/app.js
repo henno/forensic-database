@@ -448,29 +448,27 @@ function handleMarkdownInput(e) {
 function renderMarkdownToHTML(markdown) {
     if (!markdown) return '<em style="color: #999;">Preview will appear here...</em>';
 
-
-
     // Store protected content to avoid conflicts
     const protectedContent = [];
     let html = markdown;
 
     // Step 1: Protect and process images
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto; border: 1px solid #ddd; margin: 5px 0;">`);
         return placeholder;
     });
 
     // Step 2: Protect and process links
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
         return placeholder;
     });
 
     // Step 3: Protect and process code
     html = html.replace(/`([^`]+)`/g, (match, code) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        const placeholder = `MDPROTECTED${protectedContent.length}MDPROTECTED`;
         protectedContent.push(`<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace;">${code}</code>`);
         return placeholder;
     });
@@ -488,10 +486,9 @@ function renderMarkdownToHTML(markdown) {
 
     // Step 5: Restore protected content
     protectedContent.forEach((content, index) => {
-        const placeholder = `__PROTECTED_${index}__`;
-        html = html.replace(placeholder, content);
+        const placeholder = `MDPROTECTED${index}MDPROTECTED`;
+        html = html.replace(new RegExp(placeholder, 'g'), content);
     });
-
     return html;
 }
 
