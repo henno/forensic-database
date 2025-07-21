@@ -399,3 +399,41 @@ h1 {
     word-wrap: break-word;
     font-size: 12px;
 }
+
+/* Floating call context banner */
+#call-context-banner {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #007acc;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-width: 300px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#call-context-banner.visible {
+    opacity: 1;
+}
+
+.call-context-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.call-context-label {
+    font-size: 11px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.call-context-details {
+    font-size: 14px;
+    font-weight: bold;
+}

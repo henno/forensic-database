@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Initialize call context banner
+    initializeCallContextBanner();
+
     // Add click handlers to call rows
     document.querySelectorAll('.call-row').forEach(row => {
         row.addEventListener('click', function(e) {
@@ -60,6 +63,94 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Initialize and manage the floating call context banner
+function initializeCallContextBanner() {
+    const banner = document.getElementById('call-context-banner');
+    const bannerDetails = banner.querySelector('.call-context-details');
+    let currentCallId = null;
+    let scrollTimeout;
+
+    function updateBanner() {
+        const scrollPosition = window.scrollY + 100; // Offset for better detection
+        const callRows = document.querySelectorAll('.call-row');
+        let activeCall = null;
+
+        // Find which call section we're currently viewing
+        for (let i = callRows.length - 1; i >= 0; i--) {
+            const callRow = callRows[i];
+            const nestedRow = callRow.nextElementSibling;
+            
+            // Check if this call has expanded browser entries
+            if (nestedRow && nestedRow.classList.contains('nested-row') && 
+                nestedRow.style.display !== 'none') {
+                
+                const callTop = callRow.offsetTop;
+                const nestedBottom = nestedRow.offsetTop + nestedRow.offsetHeight;
+                
+                // Check if we're within this call's browser entries section
+                if (scrollPosition >= callTop && scrollPosition <= nestedBottom) {
+                    activeCall = callRow;
+                    break;
+                }
+            }
+        }
+
+        if (activeCall) {
+            const callId = activeCall.dataset.callId;
+            
+            // Only update if it's a different call
+            if (callId !== currentCallId) {
+                currentCallId = callId;
+                
+                // Extract call information
+                const cells = activeCall.querySelectorAll('td');
+                const startTime = cells[0].textContent.replace('▼', '').trim();
+                const duration = cells[2].textContent.trim();
+                const phone = cells[3].textContent.trim();
+                
+                // Update banner content
+                bannerDetails.innerHTML = `
+                    <div>${startTime}</div>
+                    <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">
+                        ${duration} • ${phone}
+                    </div>
+                `;
+                
+                // Show banner
+                banner.style.display = 'block';
+                setTimeout(() => banner.classList.add('visible'), 10);
+            }
+        } else {
+            // Hide banner if not in any call section
+            if (currentCallId !== null) {
+                currentCallId = null;
+                banner.classList.remove('visible');
+                setTimeout(() => {
+                    if (!banner.classList.contains('visible')) {
+                        banner.style.display = 'none';
+                    }
+                }, 300);
+            }
+        }
+    }
+
+    // Update on scroll with debouncing
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(updateBanner, 50);
+    });
+
+    // Update when calls are expanded/collapsed
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.call-row')) {
+            setTimeout(updateBanner, 100);
+        }
+    });
+
+    // Initial check
+    updateBanner();
+}
 
 function toggleCallDetails(callId) {
     const mainRow = document.querySelector(`tr[data-call-id="${callId}"]`);
