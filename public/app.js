@@ -1,6 +1,15 @@
 // Client-side functionality for the Forex Fraud Evidence Portal
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Add paste event listeners to annotation textareas
+    document.addEventListener('paste', handlePasteEvent);
+
+    // Add visual feedback for drag and drop (future enhancement)
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('drop', handleDrop);
+
+    // Add real-time markdown preview updates
+    document.addEventListener('input', handleMarkdownInput);
 
     // Add click handlers to call rows
     document.querySelectorAll('.call-row').forEach(row => {
@@ -169,6 +178,14 @@ function toggleBrowserAnnotation(browserId) {
         annotationRow.style.display = 'table-row';
         toggle.textContent = '▼';
         toggle.classList.add('expanded');
+
+        // Update preview when first opened
+        const textarea = annotationRow.querySelector('.annotation-textarea');
+        const previewDiv = annotationRow.querySelector('.annotation-preview .preview-content');
+        if (textarea && previewDiv) {
+            const html = renderMarkdownToHTML(textarea.value);
+            previewDiv.innerHTML = html;
+        }
     } else {
         annotationRow.style.display = 'none';
         toggle.textContent = '▶';
@@ -250,6 +267,232 @@ async function clearAnnotation(browserId) {
         statusSpan.style.color = '#dc3545';
         showError('Failed to clear annotation: ' + error.message);
     }
+}
+
+// Handle paste events for image uploads
+function handlePasteEvent(e) {
+    // Check if the paste target is an annotation textarea
+    if (!e.target.classList.contains('annotation-textarea')) {
+        return;
+    }
+
+    const clipboardData = e.clipboardData || window.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    if (!items) return;
+
+    // Look for image items in clipboard
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        if (item.type.indexOf('image') !== -1) {
+            e.preventDefault(); // Prevent default paste behavior
+
+            const file = item.getAsFile();
+            if (file) {
+                uploadImageFromClipboard(file, e.target);
+            }
+            break;
+        }
+    }
+}
+
+// Upload image from clipboard and insert markdown
+async function uploadImageFromClipboard(file, textarea) {
+    const browserId = textarea.dataset.browserId;
+    const statusSpan = document.querySelector(`.annotation-status[data-browser-id="${browserId}"]`);
+
+    try {
+        // Show upload status
+        if (statusSpan) {
+            statusSpan.textContent = 'Uploading image...';
+            statusSpan.style.color = '#007acc';
+        }
+
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('image', file, 'screenshot.png');
+
+        const response = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: formData
+        });
+
+        console.log('Upload response status:', response.status);
+        console.log('Upload response headers:', response.headers);
+
+        if (!response.ok) {
+            const responseText = await response.text();
+            console.log('Error response text:', responseText);
+
+            // Try to parse as JSON, fallback to text
+            let errorMessage;
+            try {
+                const errorData = JSON.parse(responseText);
+                errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+            } catch (e) {
+                errorMessage = `Server returned HTML instead of JSON. Status: ${response.status}`;
+            }
+
+            throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+
+        // Insert markdown image syntax at cursor position
+        const imageMarkdown = `![Screenshot](${result.url})`;
+        insertTextAtCursor(textarea, imageMarkdown);
+
+        // Update preview
+        const previewDiv = document.querySelector(`.annotation-preview[data-browser-id="${browserId}"] .preview-content`);
+        if (previewDiv) {
+            const html = renderMarkdownToHTML(textarea.value);
+            previewDiv.innerHTML = html;
+        }
+
+        // Show success status
+        if (statusSpan) {
+            statusSpan.textContent = 'Image uploaded!';
+            statusSpan.style.color = '#28a745';
+
+            // Clear status after 3 seconds
+            setTimeout(() => {
+                statusSpan.textContent = '';
+            }, 3000);
+        }
+
+    } catch (error) {
+        console.error('Error uploading image:', error);
+
+        if (statusSpan) {
+            statusSpan.textContent = 'Image upload failed';
+            statusSpan.style.color = '#dc3545';
+        }
+
+        showError('Failed to upload image: ' + error.message);
+    }
+}
+
+// Insert text at cursor position in textarea
+function insertTextAtCursor(textarea, text) {
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const beforeText = textarea.value.substring(0, startPos);
+    const afterText = textarea.value.substring(endPos);
+
+    // Insert the text
+    textarea.value = beforeText + text + afterText;
+
+    // Set cursor position after inserted text
+    const newCursorPos = startPos + text.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+
+    // Focus the textarea
+    textarea.focus();
+}
+
+// Handle drag over events for visual feedback
+function handleDragOver(e) {
+    if (!e.target.classList.contains('annotation-textarea')) {
+        return;
+    }
+
+    e.preventDefault();
+    e.target.style.borderColor = '#007acc';
+    e.target.style.backgroundColor = '#f0f8ff';
+}
+
+// Handle drop events for image uploads
+function handleDrop(e) {
+    if (!e.target.classList.contains('annotation-textarea')) {
+        return;
+    }
+
+    e.preventDefault();
+
+    // Reset visual feedback
+    e.target.style.borderColor = '#ccc';
+    e.target.style.backgroundColor = 'white';
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+
+        // Check if it's an image
+        if (file.type.startsWith('image/')) {
+            uploadImageFromClipboard(file, e.target);
+        } else {
+            showError('Please drop an image file');
+        }
+    }
+}
+
+// Handle markdown input for real-time preview
+function handleMarkdownInput(e) {
+    if (!e.target.classList.contains('annotation-textarea')) {
+        return;
+    }
+
+    const browserId = e.target.dataset.browserId;
+    const previewDiv = document.querySelector(`.annotation-preview[data-browser-id="${browserId}"] .preview-content`);
+
+    if (previewDiv) {
+        const markdown = e.target.value;
+        const html = renderMarkdownToHTML(markdown);
+        previewDiv.innerHTML = html;
+    }
+}
+
+// Client-side markdown renderer (matches server-side logic)
+function renderMarkdownToHTML(markdown) {
+    if (!markdown) return '<em style="color: #999;">Preview will appear here...</em>';
+
+
+
+    // Store protected content to avoid conflicts
+    const protectedContent = [];
+    let html = markdown;
+
+    // Step 1: Protect and process images
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto; border: 1px solid #ddd; margin: 5px 0;">`);
+        return placeholder;
+    });
+
+    // Step 2: Protect and process links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+        return placeholder;
+    });
+
+    // Step 3: Protect and process code
+    html = html.replace(/`([^`]+)`/g, (match, code) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace;">${code}</code>`);
+        return placeholder;
+    });
+
+    // Step 4: Process formatting on remaining text
+    html = html
+        // Bold: **text** or __text__
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        // Italic: *text* or _text_
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
+        // Line breaks
+        .replace(/\n/g, '<br>');
+
+    // Step 5: Restore protected content
+    protectedContent.forEach((content, index) => {
+        const placeholder = `__PROTECTED_${index}__`;
+        html = html.replace(placeholder, content);
+    });
+
+    return html;
 }
 
 

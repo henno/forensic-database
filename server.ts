@@ -3,7 +3,8 @@ import {Database} from 'sqlite3';
 import multer from 'multer';
 import cors from 'cors';
 import path from 'path';
-import {appendFileSync, existsSync, mkdirSync} from 'fs';
+import {appendFileSync, existsSync, mkdirSync, renameSync} from 'fs';
+import fs from 'fs';
 import session from 'express-session';
 import {engine} from 'express-handlebars';
 import dotenv from 'dotenv';
@@ -79,6 +80,56 @@ const hbs = engine({
         return title_en;
       }
       return title || '(no title)';
+    },
+    renderMarkdown: function(markdown: string) {
+      if (!markdown) return '';
+
+
+
+      // Store protected content to avoid conflicts
+      const protectedContent = [];
+      let html = markdown;
+
+      // Step 1: Protect and process images
+      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto; border: 1px solid #ddd; margin: 5px 0;">`);
+        return placeholder;
+      });
+
+      // Step 2: Protect and process links
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+        return placeholder;
+      });
+
+      // Step 3: Protect and process code
+      html = html.replace(/`([^`]+)`/g, (match, code) => {
+        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+        protectedContent.push(`<code style="background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace;">${code}</code>`);
+        return placeholder;
+      });
+
+      // Step 4: Process formatting on remaining text
+      html = html
+        // Bold: **text** or __text__
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        // Italic: *text* or _text_
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
+        // Line breaks
+        .replace(/\n/g, '<br>');
+
+      // Step 5: Restore protected content
+      for (let i = 0; i < protectedContent.length; i++) {
+        const placeholder = `__PROTECTED_${i}__`;
+        const content = protectedContent[i];
+        html = html.replace(placeholder, content);
+      }
+
+      return html;
     },
     formatDuration: function(seconds: number) {
       if (!seconds || seconds === 0) return '00:00:00';
@@ -235,14 +286,15 @@ app.use(express.static('public', { index: false }));
 app.use('/uploads', express.static('uploads'));
 
 // Create uploads directory if it doesn't exist
-if (!existsSync('uploads')) {
-  mkdirSync('uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!existsSync(uploadsDir)) {
+  mkdirSync(uploadsDir);
 }
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -736,6 +788,52 @@ app.delete('/api/browser-history/:id/annotation', requireAuth, requireAdmin, (re
     res.json({ message: 'Annotation deleted successfully' });
   });
 });
+
+// Image upload endpoint for markdown annotations
+app.post('/api/upload-image', requireAuth, upload.single('image'), (req, res) => {
+  console.log('Image upload request received');
+  console.log('User:', req.session?.user?.username);
+  console.log('File:', req.file);
+
+  if (!req.file) {
+    console.log('No file provided in request');
+    res.status(400).json({ error: 'No image file provided' });
+    return;
+  }
+
+  // Generate a unique filename
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  const extension = path.extname(req.file.originalname) || '.png';
+  const filename = `screenshot_${timestamp}_${randomString}${extension}`;
+  const filepath = path.join(uploadsDir, filename);
+
+  try {
+    console.log('Moving file from', req.file.path, 'to', filepath);
+
+    // Move the uploaded file to the uploads directory
+    fs.renameSync(req.file.path, filepath);
+
+    // Return the URL for the uploaded image
+    const imageUrl = `/uploads/${filename}`;
+
+    console.log('Image uploaded successfully:', imageUrl);
+    logToFile(`Image uploaded: ${filename} (${req.file.size} bytes)`);
+
+    res.json({
+      success: true,
+      filename: filename,
+      url: imageUrl,
+      size: req.file.size,
+      originalName: req.file.originalname
+    });
+
+  } catch (error) {
+    console.error('Error saving uploaded image:', error);
+    res.status(500).json({ error: 'Failed to save image: ' + error.message });
+  }
+});
+
 
 // Start server
 app.listen(PORT, () => {

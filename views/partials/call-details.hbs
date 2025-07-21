@@ -31,16 +31,29 @@
                 <tr class="browser-annotation-row" id="browser-annotation-{{id}}" style="display: none;">
                     <td colspan="4" style="padding: 10px; background-color: #f9f9f9; border-top: none;">
                         <div class="annotation-section">
-                            <strong>Annotation:</strong>
-
                             {{#if @root.isAdmin}}
+                                <strong>Annotation:</strong>
                                 <div style="margin-top: 5px;">
-                                    <textarea
-                                        class="annotation-textarea"
-                                        data-browser-id="{{id}}"
-                                        placeholder="Add markdown annotation for this browser entry..."
-                                        style="width: 100%; min-height: 100px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; padding: 5px; resize: vertical; background: white;"
-                                        spellcheck="false">{{annotation}}</textarea>
+                                    <div style="display: flex; gap: 10px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">Markdown Editor:</div>
+                                            <textarea
+                                                class="annotation-textarea"
+                                                data-browser-id="{{id}}"
+                                                placeholder="Add markdown annotation for this browser entry... (Tip: Paste screenshots with Ctrl+V or Windows+Shift+S)"
+                                                style="width: 100%; min-height: 200px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; padding: 5px; resize: vertical; background: white; box-sizing: border-box;"
+                                                spellcheck="false">{{annotation}}</textarea>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">Preview:</div>
+                                            <div
+                                                class="annotation-preview"
+                                                data-browser-id="{{id}}"
+                                                style="width: 100%; min-height: 200px; border: 1px solid #ccc; padding: 5px; background: white; overflow-y: auto; font-size: 12px; box-sizing: border-box;">
+                                                <div class="preview-content">{{{renderMarkdown annotation}}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div style="margin-top: 5px;">
                                         <button class="save-annotation-btn" data-browser-id="{{id}}" style="background: #007acc; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-right: 5px;">Save</button>
                                         <button class="clear-annotation-btn" data-browser-id="{{id}}" style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;">Clear</button>
@@ -48,7 +61,11 @@
                                     </div>
                                 </div>
                             {{else}}
-                                <div style="margin-top: 5px; padding: 10px; background: white; border: 1px solid #ddd; min-height: 50px; white-space: pre-wrap; font-family: monospace; font-size: 12px;">{{#if annotation}}{{annotation}}{{else}}<em>No annotation</em>{{/if}}</div>
+                                <div style="margin-top: 5px;">
+                                    <div style="padding: 10px; background: white; border: 1px solid #ddd; min-height: 100px; font-size: 12px;">
+                                        {{#if annotation}}{{{renderMarkdown annotation}}}{{else}}<em style="color: #999;">No annotation</em>{{/if}}
+                                    </div>
+                                </div>
                             {{/if}}
                         </div>
                     </td>
