@@ -218,15 +218,44 @@ const hbs = engine({
         const urlObj = new URL(url);
         const hostname = urlObj.hostname;
         const protocol = urlObj.protocol + '//';
-        const pathname = urlObj.pathname + urlObj.search + urlObj.hash;
+        
+        // Decode the pathname, search, and hash components
+        let pathname = '';
+        try {
+          pathname = decodeURIComponent(urlObj.pathname);
+        } catch {
+          pathname = urlObj.pathname;
+        }
+        
+        let search = '';
+        try {
+          search = decodeURIComponent(urlObj.search);
+        } catch {
+          search = urlObj.search;
+        }
+        
+        let hash = '';
+        try {
+          hash = decodeURIComponent(urlObj.hash);
+        } catch {
+          hash = urlObj.hash;
+        }
+        
+        const fullPath = pathname + search + hash;
         
         const protocolSpan = protocol ? `<span style="color: #666;">${protocol}</span>` : '';
         const hostnameSpan = `<span style="font-weight: bold; color: #000;">${hostname}</span>`;
-        const pathSpan = pathname ? `<span style="color: #666;">${pathname}</span>` : '';
+        const pathSpan = fullPath ? `<span style="color: #666;">${fullPath}</span>` : '';
         
         return protocolSpan + hostnameSpan + pathSpan;
       } catch (e) {
-        return `<span style="color: #666;">${url}</span>`;
+        // Try to decode the entire URL if parsing fails
+        try {
+          const decodedUrl = decodeURIComponent(url);
+          return `<span style="color: #666;">${decodedUrl}</span>`;
+        } catch {
+          return `<span style="color: #666;">${url}</span>`;
+        }
       }
     },
     eq: function(a: any, b: any) {
@@ -237,6 +266,14 @@ const hbs = engine({
     },
     trim: function(str: string) {
       return str ? String(str).trim() : '';
+    },
+    decodeUrl: function(url: string) {
+      if (!url) return '';
+      try {
+        return decodeURIComponent(url);
+      } catch {
+        return url;
+      }
     }
   }
 });
