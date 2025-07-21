@@ -236,7 +236,7 @@ const hbs = engine({
       return a || b;
     },
     trim: function(str: string) {
-      return str ? str.trim() : '';
+      return str ? String(str).trim() : '';
     }
   }
 });
