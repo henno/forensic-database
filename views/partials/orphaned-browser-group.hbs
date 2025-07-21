@@ -1,0 +1,83 @@
+<!-- Grouped orphaned browser entries displayed as a nested row without parent call -->
+<tr class="nested-row orphaned-browser-nested" style="display: table-row;">
+    <td colspan="4">
+        <div style="font-weight:bold; color:#dc3545; margin-bottom:6px; margin-left:10px;">Browser activity outside of calls:</div>
+        <table border="1" cellspacing="0" cellpadding="1">
+            <thead>
+                <tr>
+                    <th style="width: 20px;"></th>
+                    <th>Date and Time</th>
+                    <th>Title</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each browser_entries}}
+                    <tr class="browser-entry-row" data-browser-id="{{id}}">
+                        <td style="text-align: center; {{#if (or @root.isAdmin annotation)}}cursor: pointer; user-select: none;{{else}}cursor: default;{{/if}}">
+                            {{#if (or @root.isAdmin annotation)}}
+                                <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                            {{else}}
+                                <span style="font-size: 12px; color: transparent;">▶</span>
+                            {{/if}}
+                        </td>
+                        <td class="date-cell">{{{formatDate time_usec true}}}</td>
+                        <td class="title-cell" title="{{#if title}}Original: {{title}}{{else}}(no title){{/if}}">
+                            {{#if favicon_base64}}
+                                <img src="{{favicon_base64}}" alt="favicon" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
+                            {{/if}}
+                            <a href="{{url}}" target="_blank" rel="noopener noreferrer" {{#if annotation}}style="font-weight: bold;"{{/if}}>
+                                {{getDisplayTitle title title_en}}
+                            </a>
+                        </td>
+                        <td class="url-cell" title="{{url}}">
+                            {{{formatUrl url}}}
+                        </td>
+                    </tr>
+                    <tr class="browser-annotation-row" id="browser-annotation-{{id}}" style="display: none;">
+                        <td colspan="4" style="padding: 10px; background-color: #f9f9f9; border-top: none;">
+                            <div class="annotation-section">
+                                {{#if @root.isAdmin}}
+                                    <strong>Annotation:</strong>
+                                    <div style="margin-top: 5px;">
+                                        <div style="display: flex; gap: 10px;">
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">Markdown Editor:</div>
+                                                <textarea
+                                                    class="annotation-textarea"
+                                                    data-browser-id="{{id}}"
+                                                    placeholder="Add markdown annotation for this browser entry... (Tip: Paste screenshots with Ctrl+V or Windows+Shift+S)"
+                                                    style="width: 100%; min-height: 200px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; padding: 5px; resize: vertical; background: white; box-sizing: border-box;"
+                                                    spellcheck="false">{{annotation}}</textarea>
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">Preview:</div>
+                                                <div
+                                                    class="annotation-preview"
+                                                    data-browser-id="{{id}}"
+                                                    style="width: 100%; min-height: 200px; border: 1px solid #ccc; padding: 5px; background: white; overflow-y: auto; font-size: 12px; box-sizing: border-box;">
+                                                    <div class="preview-content">{{{renderMarkdown annotation}}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 5px;">
+                                            <button class="save-annotation-btn" data-browser-id="{{id}}" style="background: #007acc; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-right: 5px;">Save</button>
+                                            <button class="clear-annotation-btn" data-browser-id="{{id}}" style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;">Clear</button>
+                                            <span class="annotation-status" data-browser-id="{{id}}" style="margin-left: 10px; font-style: italic; color: #666;"></span>
+                                        </div>
+                                    </div>
+                                {{else}}
+                                    <div style="margin-top: 5px;">
+                                        <div style="padding: 10px; background: white; border: 1px solid #ddd; min-height: 100px; font-size: 12px;">
+                                            {{#if annotation}}{{{renderMarkdown annotation}}}{{else}}<em style="color: #999;">No annotation</em>{{/if}}
+                                        </div>
+                                    </div>
+                                {{/if}}
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </td>
+</tr>

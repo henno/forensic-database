@@ -29,7 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             const row = e.target.closest('.browser-entry-row');
             const browserId = row.dataset.browserId;
-            toggleBrowserAnnotation(browserId);
+            const toggle = row.querySelector('.browser-toggle');
+
+            // Only toggle if the triangle is visible (not transparent)
+            if (toggle && toggle.style.color !== 'transparent') {
+                toggleBrowserAnnotation(browserId);
+            }
         }
 
         // Handle save annotation button clicks
@@ -448,9 +453,21 @@ function handleMarkdownInput(e) {
 function renderMarkdownToHTML(markdown) {
     if (!markdown) return '<em style="color: #999;">Preview will appear here...</em>';
 
+    // First, escape HTML to prevent XSS and template breaking
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
     // Store protected content to avoid conflicts
     const protectedContent = [];
-    let html = markdown;
+    let html = escapeHtml(markdown);
 
     // Step 1: Protect and process images
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {

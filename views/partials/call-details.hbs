@@ -12,8 +12,12 @@
         <tbody>
             {{#each browser_history}}
                 <tr class="browser-entry-row" data-browser-id="{{id}}">
-                    <td style="text-align: center; cursor: pointer; user-select: none;">
-                        <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                    <td style="text-align: center; {{#if (or @root.isAdmin annotation)}}cursor: pointer; user-select: none;{{else}}cursor: default;{{/if}}">
+                        {{#if (or @root.isAdmin annotation)}}
+                            <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                        {{else}}
+                            <span style="font-size: 12px; color: transparent;">▶</span>
+                        {{/if}}
                     </td>
                     <td class="date-cell">{{{formatDate time_usec true}}}</td>
                     <td class="title-cell" title="{{#if title}}Original: {{title}}{{else}}(no title){{/if}}">
@@ -75,15 +79,4 @@
     </table>
 {{/if}}
 
-{{#if attachments}}
-    <div class="attachments">
-        <h4>📎 Attachments ({{attachments.length}})</h4>
-        {{#each attachments}}
-            {{> attachment}}
-        {{/each}}
-    </div>
-{{/if}}
 
-{{#if ../isAdmin}}
-    {{> add-attachment-form}}
-{{/if}}

@@ -347,3 +347,55 @@ h1 {
     font-size: 1em;
     margin-bottom: 0;
 }
+
+/* Browser entry row styles */
+.browser-entry-row {
+    background-color: #f8f9fa;
+}
+
+.browser-entry-row:hover {
+    background-color: #e9ecef;
+}
+
+.browser-entry-row td:first-child {
+    background-color: #e9ecef;
+    border-right: 2px solid #dee2e6;
+}
+
+.browser-entry-row td:first-child:hover {
+    background-color: #dee2e6;
+}
+
+/* Orphaned browser entries styling - just a subtle distinction for the header */
+.orphaned-browser-nested {
+    /* Orphaned browser entries use the same styling as regular browser entries */
+    /* Only the header text is different to indicate they're outside of calls */
+}
+
+.browser-toggle {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-weight: bold;
+    color: #007acc;
+}
+
+.browser-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.date-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.title-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.url-cell {
+    max-width: 400px;
+    word-wrap: break-word;
+    font-size: 12px;
+}

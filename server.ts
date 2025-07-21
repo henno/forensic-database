@@ -84,11 +84,21 @@ const hbs = engine({
     renderMarkdown: function(markdown: string) {
       if (!markdown) return '';
 
-
+      // First, escape HTML to prevent XSS and template breaking
+      function escapeHtml(text: string): string {
+        const map: { [key: string]: string } = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+      }
 
       // Store protected content to avoid conflicts
       const protectedContent: string[] = [];
-      let html = markdown;
+      let html = escapeHtml(markdown);
 
       // Step 1: Protect and process images
       html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
@@ -221,6 +231,9 @@ const hbs = engine({
     },
     eq: function(a: any, b: any) {
       return a === b;
+    },
+    or: function(a: any, b: any) {
+      return a || b;
     }
   }
 });
@@ -381,7 +394,7 @@ app.get('/', requireAuth, (req: any, res: any) => {
   logToFile('=== DASHBOARD ROUTE ACCESSED ===');
   
   const query = `
-    SELECT 
+    SELECT
       c.*,
       (
         SELECT json_group_array(
@@ -413,11 +426,30 @@ app.get('/', requireAuth, (req: any, res: any) => {
             'created_at', ca.created_at
           )
         )
-        FROM call_attachments ca 
+        FROM call_attachments ca
         WHERE ca.call_id = c.id
       ) as attachments
     FROM calls c
     ORDER BY c.start_time ASC
+  `;
+
+  // Query for orphaned browser entries (not associated with any call)
+  const orphanedBrowserQuery = `
+    SELECT
+      bh.id,
+      bh.time_usec,
+      bh.title,
+      bh.title_en,
+      bh.url,
+      f.url as favicon_url,
+      f.base64_data as favicon_base64,
+      f.id as favicon_id,
+      COALESCE(ba.annotation, '') as annotation
+    FROM browser_history bh
+    LEFT JOIN favicons f ON bh.favicon_id = f.id
+    LEFT JOIN browser_annotations ba ON bh.id = ba.browser_history_id
+    WHERE bh.call_id IS NULL
+    ORDER BY bh.time_usec ASC
   `;
   
   db.all(query, (err, rows) => {
@@ -462,13 +494,93 @@ app.get('/', requireAuth, (req: any, res: any) => {
       };
     });
     
-    logToFile(`RENDERING DASHBOARD with ${calls.length} calls`);
-    
-    res.render('dashboard', {
-      title: 'Forex Fraud Evidence Portal',
-      user: req.session.user,
-      isAdmin: req.session.user.role === 'admin',
-      calls: calls
+    // Now get orphaned browser entries
+    db.all(orphanedBrowserQuery, (err, orphanedRows) => {
+      if (err) {
+        logToFile(`ORPHANED BROWSER QUERY ERROR: ${err.message}`);
+        console.error('Orphaned browser query error:', err);
+        // Continue with just the calls data
+        orphanedRows = [];
+      }
+
+      const orphanedBrowserEntries = orphanedRows.map((row: any) => ({
+        ...row,
+        type: 'orphaned_browser_entry',
+        // Convert time_usec to timestamp for sorting
+        timestamp: row.time_usec / 1000000, // Convert microseconds to seconds
+        readable_time: new Date(row.time_usec / 1000).toISOString()
+      }));
+
+      // Create a chronological timeline mixing calls and grouped orphaned browser entries
+      const timeline = [];
+
+      // Add calls to timeline
+      calls.forEach(call => {
+        timeline.push({
+          ...call,
+          type: 'call',
+          timestamp: new Date(call.start_time).getTime() / 1000 // Convert to seconds
+        });
+      });
+
+      // Group consecutive orphaned browser entries
+      if (orphanedBrowserEntries.length > 0) {
+        const orphanedGroups = [];
+        let currentGroup = [orphanedBrowserEntries[0]];
+
+        for (let i = 1; i < orphanedBrowserEntries.length; i++) {
+          const currentEntry = orphanedBrowserEntries[i];
+          const previousEntry = orphanedBrowserEntries[i - 1];
+
+          // Check if there's a call between this entry and the previous one
+          const currentTime = currentEntry.timestamp;
+          const previousTime = previousEntry.timestamp;
+
+          const callBetween = calls.some(call => {
+            const callStart = new Date(call.start_time).getTime() / 1000;
+            const callEnd = new Date(call.end_time).getTime() / 1000;
+            return (callStart > previousTime && callStart < currentTime) ||
+                   (callEnd > previousTime && callEnd < currentTime) ||
+                   (callStart < previousTime && callEnd > currentTime);
+          });
+
+          if (callBetween) {
+            // Start a new group
+            orphanedGroups.push(currentGroup);
+            currentGroup = [currentEntry];
+          } else {
+            // Add to current group
+            currentGroup.push(currentEntry);
+          }
+        }
+
+        // Add the last group
+        orphanedGroups.push(currentGroup);
+
+        // Add grouped orphaned entries to timeline
+        orphanedGroups.forEach(group => {
+          timeline.push({
+            type: 'orphaned_browser_group',
+            timestamp: group[0].timestamp, // Use timestamp of first entry in group
+            browser_entries: group
+          });
+        });
+      }
+
+      // Sort timeline chronologically
+      timeline.sort((a, b) => a.timestamp - b.timestamp);
+
+      logToFile(`RENDERING DASHBOARD with ${calls.length} calls and ${orphanedBrowserEntries.length} orphaned browser entries in chronological order`);
+
+      res.render('dashboard', {
+        title: 'Forex Fraud Evidence Portal',
+        user: req.session.user,
+        isAdmin: req.session.user.role === 'admin',
+        timeline: timeline,
+        calls: calls, // Keep for backward compatibility if needed
+        orphanedBrowserEntries: orphanedBrowserEntries,
+        hasOrphanedEntries: orphanedBrowserEntries.length > 0
+      });
     });
   });
 });
@@ -486,7 +598,7 @@ app.get('/api/user-info', requireAuth, (req: any, res: any) => {
 // Get all calls with their browser history and attachments
 app.get('/api/calls', requireAuth, (req, res) => {
   const query = `
-    SELECT 
+    SELECT
       c.*,
       (
         SELECT json_group_array(
@@ -518,27 +630,57 @@ app.get('/api/calls', requireAuth, (req, res) => {
             'created_at', ca.created_at
           )
         )
-        FROM call_attachments ca 
+        FROM call_attachments ca
         WHERE ca.call_id = c.id
       ) as attachments
     FROM calls c
     ORDER BY c.start_time ASC
   `;
-  
+
   db.all(query, (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
     }
-    
+
     // Parse JSON fields
     const calls = rows.map((row: any) => ({
       ...row,
       browser_history: JSON.parse(row.browser_history).filter((entry: any) => entry.id !== null),
       attachments: row.attachments ? JSON.parse(row.attachments).filter((att: any) => att.id !== null) : []
     }));
-    
+
     res.json(calls);
+  });
+});
+
+// Get orphaned browser entries (not associated with any call)
+app.get('/api/orphaned-browser-entries', requireAuth, (req, res) => {
+  const query = `
+    SELECT
+      bh.id,
+      bh.time_usec,
+      bh.title,
+      bh.title_en,
+      bh.url,
+      f.url as favicon_url,
+      f.base64_data as favicon_base64,
+      f.id as favicon_id,
+      COALESCE(ba.annotation, '') as annotation
+    FROM browser_history bh
+    LEFT JOIN favicons f ON bh.favicon_id = f.id
+    LEFT JOIN browser_annotations ba ON bh.id = ba.browser_history_id
+    WHERE bh.call_id IS NULL
+    ORDER BY bh.time_usec DESC
+  `;
+
+  db.all(query, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+
+    res.json(rows);
   });
 });
 

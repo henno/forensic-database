@@ -8,9 +8,13 @@
         </tr>
     </thead>
     <tbody>
-        {{#if calls}}
-            {{#each calls}}
-                {{> call-row}}
+        {{#if timeline}}
+            {{#each timeline}}
+                {{#if (eq type 'call')}}
+                    {{> call-row}}
+                {{else if (eq type 'orphaned_browser_group')}}
+                    {{> orphaned-browser-group}}
+                {{/if}}
             {{/each}}
         {{else}}
             <tr><td colspan="4" class="no-data">No call history found</td></tr>

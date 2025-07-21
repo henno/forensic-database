@@ -1,0 +1,108 @@
+{{#if hasOrphanedEntries}}
+    <div style="margin-top: 30px; margin-bottom: 20px;">
+        <div style="font-weight:bold; color:#dc3545; margin-bottom:10px; font-size: 18px;">
+            Browser entries not associated with any call:
+        </div>
+        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
+            These browser entries occurred outside of any recorded phone calls.
+        </div>
+        
+        <table border="1" cellspacing="0" cellpadding="1" style="width: 100%;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="width: 20px;"></th>
+                    <th>Date and Time</th>
+                    <th>Title</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each orphanedBrowserEntries}}
+                    <tr class="browser-entry-row orphaned-entry" data-browser-id="{{id}}">
+                        <td style="text-align: center; cursor: pointer; user-select: none;">
+                            <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                        </td>
+                        <td class="date-cell">{{{formatDate time_usec true}}}</td>
+                        <td class="title-cell" title="{{#if title}}Original: {{title}}{{else}}(no title){{/if}}">
+                            {{#if favicon_base64}}
+                                <img src="data:image/png;base64,{{favicon_base64}}" 
+                                     style="width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;" 
+                                     alt="favicon">
+                            {{/if}}
+                            {{#if title_en}}
+                                <span style="color: #333;">{{title_en}}</span>
+                                {{#if title}}
+                                    <br><small style="color: #666; font-style: italic;">{{title}}</small>
+                                {{/if}}
+                            {{else}}
+                                {{#if title}}
+                                    <span style="color: #333;">{{title}}</span>
+                                {{else}}
+                                    <span style="color: #999; font-style: italic;">(no title)</span>
+                                {{/if}}
+                            {{/if}}
+                        </td>
+                        <td class="url-cell">
+                            {{#if url}}
+                                <a href="{{url}}" target="_blank" style="color: #007acc; text-decoration: none;">
+                                    {{url}}
+                                </a>
+                            {{else}}
+                                <span style="color: #999; font-style: italic;">(no URL)</span>
+                            {{/if}}
+                        </td>
+                    </tr>
+                    
+                    <!-- Annotation row for this browser entry -->
+                    <tr id="browser-annotation-{{id}}" style="display: none;">
+                        <td colspan="4" style="padding: 10px; background-color: #f8f9fa; border-top: none;">
+                            <div style="display: flex; gap: 20px;">
+                                <!-- Annotation Editor -->
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold; margin-bottom: 5px; color: #333;">
+                                        Annotation (Markdown supported):
+                                    </div>
+                                    <textarea 
+                                        class="annotation-textarea" 
+                                        data-browser-id="{{id}}" 
+                                        style="width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; resize: vertical;"
+                                        placeholder="Add your notes here... You can use **bold**, *italic*, `code`, and other markdown formatting.">{{annotation}}</textarea>
+                                    
+                                    <div style="margin-top: 8px; display: flex; gap: 10px; align-items: center;">
+                                        {{#if ../isAdmin}}
+                                            <button class="save-annotation-btn" data-browser-id="{{id}}" 
+                                                    style="padding: 6px 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                Save
+                                            </button>
+                                            <button class="clear-annotation-btn" data-browser-id="{{id}}" 
+                                                    style="padding: 6px 12px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                Clear
+                                            </button>
+                                        {{/if}}
+                                        <span class="annotation-status" data-browser-id="{{id}}" style="font-size: 12px; color: #666;"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview -->
+                                <div style="flex: 1;">
+                                    <div style="font-weight: bold; margin-bottom: 5px; color: #333;">
+                                        Preview:
+                                    </div>
+                                    <div class="annotation-preview" style="border: 1px solid #ddd; border-radius: 4px; padding: 8px; background-color: white; min-height: 120px; font-size: 13px; line-height: 1.4;">
+                                        <div class="preview-content">
+                                            {{#if annotation}}
+                                                {{{renderMarkdown annotation}}}
+                                            {{else}}
+                                                <em style="color: #999;">No annotation yet...</em>
+                                            {{/if}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+{{/if}}
