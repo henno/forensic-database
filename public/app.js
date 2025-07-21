@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add real-time markdown preview updates
     document.addEventListener('input', handleMarkdownInput);
 
+    // Initialize previews for already-expanded browser entries (viewer mode)
+    document.querySelectorAll('.browser-annotation-row[style*="table-row"]').forEach(row => {
+        const textarea = row.querySelector('.annotation-textarea');
+        const previewDiv = row.querySelector('.annotation-preview .preview-content');
+        if (textarea && previewDiv && textarea.value) {
+            const html = renderMarkdownToHTML(textarea.value);
+            previewDiv.innerHTML = html;
+        }
+    });
+
     // Add click handlers to call rows
     document.querySelectorAll('.call-row').forEach(row => {
         row.addEventListener('click', function(e) {

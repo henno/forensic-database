@@ -14,7 +14,7 @@
                 <tr class="browser-entry-row" data-browser-id="{{id}}">
                     <td style="text-align: center; {{#if (or @root.isAdmin annotation)}}cursor: pointer; user-select: none;{{else}}cursor: default;{{/if}}">
                         {{#if (or @root.isAdmin annotation)}}
-                            <span class="browser-toggle" style="font-size: 12px;">▶</span>
+                            <span class="browser-toggle" style="font-size: 12px;">{{#if @root.isAdmin}}▶{{else}}{{#if annotation}}▼{{else}}▶{{/if}}{{/if}}</span>
                         {{else}}
                             <span style="font-size: 12px; color: transparent;">▶</span>
                         {{/if}}
@@ -32,7 +32,7 @@
                         {{{formatUrl url}}}
                     </td>
                 </tr>
-                <tr class="browser-annotation-row" id="browser-annotation-{{id}}" style="display: none;">
+                <tr class="browser-annotation-row" id="browser-annotation-{{id}}" style="display: {{#if @root.isAdmin}}none{{else}}{{#if annotation}}table-row{{else}}none{{/if}}{{/if}};">
                     <td colspan="4" style="padding: 10px; background-color: #f9f9f9; border-top: none;">
                         <div class="annotation-section">
                             {{#if @root.isAdmin}}
