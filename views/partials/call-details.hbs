@@ -20,7 +20,7 @@
                         {{#if favicon_base64}}
                             <img src="{{favicon_base64}}" alt="favicon" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;">
                         {{/if}}
-                        <a href="{{url}}" target="_blank" rel="noopener noreferrer">
+                        <a href="{{url}}" target="_blank" rel="noopener noreferrer" {{#if annotation}}style="font-weight: bold;"{{/if}}>
                             {{getDisplayTitle title title_en}}
                         </a>
                     </td>
