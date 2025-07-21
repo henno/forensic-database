@@ -1,6 +1,19 @@
 <div class="case-banner">
-    <h2>Forex Fraud Case Summary</h2>
+    <h2>Forex Fraud Case Summary for Koit Ortus</h2>
     <p>
-        This portal documents evidence for a client who was scammed by Forex fraudsters. The scam began with a fake news article posted to his Facebook feed via paid ads, redirecting to websites that mimicked reputable news sources. These sites featured prominent figures endorsing an app for passive income. After registering, the client received phone calls from fraudsters who guided him to transfer money to suspicious websites and take quick loans, funneling funds into a controlled forex account. His bank intervened and closed his accounts, but Revolut now requests evidence. This portal shows which sites were visited during calls and allows the admin to upload additional files, such as images drawn by scammers and videos recorded during scam calls.
+        This portal documents evidence for a client who was scammed by Forex fraudsters. The scam began with a fake news article posted to his Facebook feed via paid ads, redirecting to websites that mimicked reputable news sources. These sites featured prominent figures endorsing an app for passive income. After registering, the client received phone calls from fraudsters who guided him to transfer money to suspicious websites and take quick loans, funneling funds into a controlled forex account. His bank intervened and closed his accounts, but Revolut now requests evidence. This portal shows which sites were visited during calls and allows to upload additional files, such as images drawn by scammers and videos recorded during scam calls.
+
+        Evidence was gathered as follows:
+        <ul>
+            <li>Call Log Analytics v2.1.6 was installed on Koit's Android phone. Then that app's export functionality was used to export all his calls between 2025-06-05 and 2025-06-23. The CSV file was uploaded to his Google Drive and downloaded to his computer.</li>
+            <li>LibreOffice Calc was used to open the CSV file and remove any personal calls unrelated to the case. The resulting CSV file was saved as a new CSV file as calls.csv.</li>
+            <li>The browser history was exported from Google Takeout as JSON file</li>
+            <li>An app was written to clean the browser history from unrelated entries and show the result as pretty HTML file</li>
+            <li>The app was extended to read data from a sqlite database instead. Import scripts were written to import the calls.csv and cleaned browser history JSON into the database</li>
+            <li>The app was extended to allow adding annotations to browser history entries and uploading images.</li>
+        </ul>
+
+        <p> The following is the result of that.</p>
+         <p>The browser entries that are in bold contain annotations which can be seen by expanding the row.</p>
     </p>
 </div>
