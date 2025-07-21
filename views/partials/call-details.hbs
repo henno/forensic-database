@@ -54,7 +54,7 @@
                                                 class="annotation-preview"
                                                 data-browser-id="{{id}}"
                                                 style="width: 100%; min-height: 200px; border: 1px solid #ccc; padding: 5px; background: white; overflow-y: auto; font-size: 12px; box-sizing: border-box;">
-                                                <div class="preview-content">{{{renderMarkdown annotation}}}</div>
+                                                <div class="preview-content">{{{renderMarkdown (trim annotation)}}}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -66,9 +66,7 @@
                                 </div>
                             {{else}}
                                 <div style="margin-top: 5px;">
-                                    <div style="padding: 10px; background: white; border: 1px solid #ddd; min-height: 100px; font-size: 12px;">
-                                        {{#if annotation}}{{{renderMarkdown annotation}}}{{else}}<em style="color: #999;">No annotation</em>{{/if}}
-                                    </div>
+                                    <div style="padding: 10px; font-size: 12px; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap;">{{#if annotation}}{{{renderMarkdown (trim annotation)}}}{{else}}<em style="color: #999;">No annotation</em>{{/if}}</div>
                                 </div>
                             {{/if}}
                         </div>

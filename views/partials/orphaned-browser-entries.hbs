@@ -91,7 +91,7 @@
                                     <div class="annotation-preview" style="border: 1px solid #ddd; border-radius: 4px; padding: 8px; background-color: white; min-height: 120px; font-size: 13px; line-height: 1.4;">
                                         <div class="preview-content">
                                             {{#if annotation}}
-                                                {{{renderMarkdown annotation}}}
+                                                {{{renderMarkdown (trim annotation)}}}
                                             {{else}}
                                                 <em style="color: #999;">No annotation yet...</em>
                                             {{/if}}

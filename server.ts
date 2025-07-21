@@ -234,6 +234,9 @@ const hbs = engine({
     },
     or: function(a: any, b: any) {
       return a || b;
+    },
+    trim: function(str: string) {
+      return str ? str.trim() : '';
     }
   }
 });
